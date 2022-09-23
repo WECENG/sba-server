@@ -3,21 +3,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>com.tsieframework.boot</groupId>
-        <artifactId>tsie-boot-parent</artifactId>
-        <version>3.1.0</version>
-    </parent>
 
     <groupId>com.tsintergy</groupId>
     <artifactId>sba-server</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${sba.version}</version>
     <packaging>war</packaging>
 
 
     <properties>
         <java.version>1.8</java.version>
         <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
+        <sba.version>1.0.0-SNAPSHOT</sba.version>
+        <tsie.version>3.1.0</tsie.version>
     </properties>
 
     <dependencies>
@@ -63,6 +60,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>com.tsieframework.boot</groupId>
+                <artifactId>tsie-boot-parent</artifactId>
+                <version>${tsie.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -78,6 +82,13 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
         </plugins>
