@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <properties>
+        <property name="LOG_HOME">${sys:user.home}/logs/sba</property>
+    </properties>
+
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="[sba] %d{yyy-MM-dd HH:mm:ss} [%t] %-5p %c %x - %m%n"/>
+        </Console>
+
+        <RollingFile  name="app-log" fileName="${LOG_HOME}/app.log" filePattern="${LOG_HOME}/app-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <pattern>[sba] %d{yyy-MM-dd HH:mm:ss} [%t] %-5p %c %x - %m%n"</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="app-error" fileName="${LOG_HOME}/error.log" filePattern="${LOG_HOME}/error-%d{yyyy-MM-dd}.log.gz">
+            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout>
+                <pattern>[sba] %d{yyy-MM-dd HH:mm:ss} [%t] %-5p %c %x - %m%n"</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="app-log"/>
+            <AppenderRef ref="app-error"/>
+        </Root>
+        <logger name="org.apache" level="ERROR" />
+        <logger name="com.tsieframework.core" level="INFO" />
+        <logger name="com.tsieframework.boot.autoconfigure" level="INFO" />
+        <logger name="org.springframework" level="INFO" />
+        <Logger name="org.hibernate" level="INFO" />
+        <Logger name="org.I0Itec.zkclient" level="ERROR" />
+        <logger name="com.alibaba.dubbo" level="INFO" />
+        <logger name="com.alibaba.dubbo.monitor" level="INFO" />
+        <logger name="com.tsintergy" level="INFO"/>
+    </Loggers>
+
+</Configuration>

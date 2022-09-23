@@ -1,0 +1,16 @@
+server:
+  port: 8080
+debug: true
+logging:
+  #  log4j2的文件名不能使用log4j.xml否则会与spring boot 默认的冲突导致配置不生效
+  config: classpath:sba_log4j2.xml
+tsie:
+  application-type: webSingle
+spring:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+dubbo:
+  registry:
+    address: zookeeper://127.0.0.1:2181
+    timeout: 10000
