@@ -11,14 +11,13 @@
 
     <groupId>com.tsintergy</groupId>
     <artifactId>sba-server</artifactId>
-    <version>${sba.version}</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
 
     <properties>
         <java.version>1.8</java.version>
         <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
-        <sba.version>1.0.0-SNAPSHOT</sba.version>
     </properties>
 
     <dependencies>
