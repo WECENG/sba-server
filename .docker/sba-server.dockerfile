@@ -1,4 +1,4 @@
-FROM registry.cn-shenzhen.aliyuncs.com/tsintergy-public/openjdk:8-jre
+FROM registry.tsintergy.com/tsintergy-public/openjdk:8
 #FROM openjdk:8-jre
 WORKDIR /app/
 
