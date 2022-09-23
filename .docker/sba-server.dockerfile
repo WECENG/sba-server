@@ -1,8 +1,6 @@
 FROM registry.tsintergy.com/tsintergy-public/openjdk:8
 #FROM openjdk:8-jre
 WORKDIR /app/
-
-RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
 ##申明入参
 
 ARG PROJECT_JAR_PATH
