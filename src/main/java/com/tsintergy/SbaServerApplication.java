@@ -1,4 +1,4 @@
-package com.tsintergy.app;
+package com.tsintergy;
 
 import com.tsieframework.boot.autoconfigure.TsieBootApplication;
 import de.codecentric.boot.admin.server.config.EnableAdminServer;

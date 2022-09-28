@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 debug: true
 logging:
   #  log4j2的文件名不能使用log4j.xml否则会与spring boot 默认的冲突导致配置不生效
@@ -10,6 +10,37 @@ spring:
   redis:
     host: 127.0.0.1
     port: 6379
+#  mail:
+#    #邮箱服务地址
+#    host: smtp.*.com
+#    username: mailUsername
+#    #客户端授权码
+#    password: mailPassword
+  boot:
+    admin:
+      monitor:
+        status-interval: 10s
+      notify:
+        reminder:
+          checkReminderInterval: ${spring.boot.admin.monitor.status-interval}
+          reminderPeriod: 1m
+        jvm:
+          monitor:
+            spare-non-heap: 2000
+        dingtalk:
+          url: https://oapi.dingtalk.com/robot/send
+          token: 203b0d9f1c58c4d31b3165ff1ac25dc3a9fda86d821e60a259effdce65e32179
+          secret: SEC6816d5f8c552a52f6deb9d5d0e2faac0c9030bb6d3515efeeee4845c35a4c07b
+#        mail:
+#          to: toMailUsername
+#          #必须与登陆的邮箱账号保持一致
+#          from: fromMailUserName
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 10
+        queue-capacity: 100
 dubbo:
   registry:
     address: zookeeper://127.0.0.1:2181
