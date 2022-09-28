@@ -9,6 +9,7 @@ import com.tsintergy.util.DingtalkRequestUtil;
 import com.tsintergy.util.JvmRequestUtil;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunction;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -30,6 +31,7 @@ import java.util.Objects;
  * @since 2022/9/27 19:23
  */
 @Component
+@Slf4j
 public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeFilterFunction {
 
     @Autowired
@@ -103,7 +105,7 @@ public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeF
 
     @Override
     public Mono<ClientResponse> filter(Instance instance, ClientRequest request, ExchangeFunction next) {
-        return next.exchange(request).doOnSubscribe((s)->{
+        return next.exchange(request).doOnSubscribe((s) -> {
             if (request.url().getPath().contains(JvmRequestUtil.HEALTH_URI)) {
                 try {
                     getReminders().putIfAbsent(instance.getId().getValue(), new Reminder(false, Instant.now()));
@@ -139,7 +141,7 @@ public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeF
                         reset(instance.getId().getValue());
                     }
                 } catch (Exception e) {
-                    //do nothing
+                    log.error("jvm信息监控异常,详情:", e.getCause());
                 }
             }
         });
