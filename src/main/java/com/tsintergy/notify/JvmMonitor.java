@@ -141,7 +141,7 @@ public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeF
                         reset(instance.getId().getValue());
                     }
                 } catch (Exception e) {
-                    log.error("jvm信息监控异常,详情:", e.getCause());
+                    log.error("jvm信息监控异常,详情:", e);
                 }
             }
         });
