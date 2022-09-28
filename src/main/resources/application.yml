@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8080
 debug: true
 logging:
   #  log4j2的文件名不能使用log4j.xml否则会与spring boot 默认的冲突导致配置不生效

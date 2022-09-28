@@ -109,11 +109,11 @@ public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeF
             if (request.url().getPath().contains(JvmRequestUtil.HEALTH_URI)) {
                 try {
                     getReminders().putIfAbsent(instance.getId().getValue(), new Reminder(false, Instant.now()));
-                    BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getServiceUrl());
-                    BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getServiceUrl());
-                    BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getServiceUrl());
-                    BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getServiceUrl());
-                    BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getServiceUrl());
+                    BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                    BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                    BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                    BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                    BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
                     BigDecimal spareHead = BigDecimalFunctions.subtract(committedHeap, usedHeap);
                     BigDecimal spareCommitHead = BigDecimalFunctions.subtract(maxHeap, committedHeap);
                     BigDecimal spareMaxHead = BigDecimalFunctions.subtract(maxHeap, usedHeap);

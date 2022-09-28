@@ -26,11 +26,11 @@ public class JvmRequestUtil {
 
     public static final String VALUE = "value";
 
-    public static final String MAX_HEAP_URI = "/actuator/metrics/jvm.memory.max";
+    public static final String MAX_HEAP_URI = "/metrics/jvm.memory.max";
 
-    public static final String USED_HEAP_URI = "/actuator/metrics/jvm.memory.used";
+    public static final String USED_HEAP_URI = "/metrics/jvm.memory.used";
 
-    public static final String COMMITTED_HEAP_URI = "/actuator/metrics/jvm.memory.committed";
+    public static final String COMMITTED_HEAP_URI = "/metrics/jvm.memory.committed";
 
     public static final String HEAP_TAG = "tag=area:heap";
 
