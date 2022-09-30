@@ -21,19 +21,19 @@ public class JvmMonitorProperties {
 
     /**
      * jvm.memory.committed - jvm.memory.used {@link java.lang.management.MemoryUsage},
-     * 剩余可以用内存，小于该值将发出警告 {@link NotifierConfig.DingtalkNotifierConfig#jvmMonitor(JvmMonitorProperties,DingtalkProperties,RemindingProperties)}
+     * 剩余可以用内存，小于该值将发出警告 {@link NotifierConfig.MonitorNotifierConfig#jvmMonitor(JvmMonitorProperties,DingtalkProperties,RemindingProperties)}
      */
     private BigDecimal spareHeap;
 
     /**
      * jvm.memory.max - jvm.memory.committed {@link java.lang.management.MemoryUsage}
-     * 剩余可以分配内存，小于该值将发出警告 {@link NotifierConfig.DingtalkNotifierConfig#jvmMonitor(JvmMonitorProperties,DingtalkProperties,RemindingProperties)}
+     * 剩余可以分配内存，小于该值将发出警告 {@link NotifierConfig.MonitorNotifierConfig#jvmMonitor(JvmMonitorProperties,DingtalkProperties,RemindingProperties)}
      */
     private BigDecimal spareCommitHeap;
 
     /**
      * jvm.memory.max - jvm.memory.used {@link java.lang.management.MemoryUsage}
-     * 剩余最大可使用内存，小于该值将发出警告 {@link NotifierConfig.DingtalkNotifierConfig#jvmMonitor(JvmMonitorProperties,DingtalkProperties,RemindingProperties)}
+     * 剩余最大可使用内存，小于该值将发出警告 {@link NotifierConfig.MonitorNotifierConfig#jvmMonitor(JvmMonitorProperties,DingtalkProperties,RemindingProperties)}
      */
     private BigDecimal spareMaxHeap;
 

@@ -14,6 +14,7 @@ import com.tsintergy.message.DingtalkMessageBuilder;
 import com.tsintergy.message.DingtalkTextMessage;
 import com.tsintergy.message.JvmMemoryInfo;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,6 +30,7 @@ import java.util.Date;
  * @author chenwc@tsintergy.com
  * @since 2022/9/26 16:40
  */
+@Slf4j
 public class DingtalkRequestUtil {
 
     /**
@@ -113,7 +115,8 @@ public class DingtalkRequestUtil {
 
     /**
      * 构造jvm消息内容
-     * @param instance 实例对象
+     *
+     * @param instance      实例对象
      * @param jvmMemoryInfo jvm信息
      * @return jvm消息内容
      */
@@ -172,18 +175,23 @@ public class DingtalkRequestUtil {
      * @param content            文本内容
      * @throws Exception
      */
-    public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, String content) throws Exception {
-        String dingtalkUrl = buildDingtalkUrl(dingtalkProperties);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaderConsts.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-        DingtalkTextMessage textMessage = DingtalkTextMessage.builder()
-                .content(content)
-                .build();
-        DingtalkMessage dingtalkMessage = DingtalkMessageBuilder.textMessageBuilder()
-                .textMessage(textMessage)
-                .build();
-        HttpEntity<String> requestEntity = new HttpEntity<>(JSON.toJSONString(dingtalkMessage), headers);
-        restTemplate.postForObject(dingtalkUrl, requestEntity, Object.class);
+    public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, String content) {
+        try {
+            String dingtalkUrl = buildDingtalkUrl(dingtalkProperties);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaderConsts.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+            DingtalkTextMessage textMessage = DingtalkTextMessage.builder()
+                    .content(content)
+                    .build();
+            DingtalkMessage dingtalkMessage = DingtalkMessageBuilder.textMessageBuilder()
+                    .textMessage(textMessage)
+                    .build();
+            HttpEntity<String> requestEntity = new HttpEntity<>(JSON.toJSONString(dingtalkMessage), headers);
+            restTemplate.postForObject(dingtalkUrl, requestEntity, Object.class);
+        } catch (Exception e) {
+            log.error("钉钉消息发送异常:", e);
+        }
+
     }
 
 }

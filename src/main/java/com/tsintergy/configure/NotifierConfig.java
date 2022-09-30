@@ -1,13 +1,8 @@
 package com.tsintergy.configure;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.tsieframework.core.base.math.BigDecimalFunctions;
-import com.tsintergy.message.JvmMemoryInfo;
-import com.tsintergy.notify.DingtalkNotifier;
+import com.tsintergy.notify.DefaultKeepingMonitor;
+import com.tsintergy.notify.StatusChangeNotifier;
 import com.tsintergy.notify.JvmMonitor;
-import com.tsintergy.util.DingtalkRequestUtil;
-import com.tsintergy.util.JvmRequestUtil;
 import de.codecentric.boot.admin.server.config.AdminServerNotifierAutoConfiguration;
 import de.codecentric.boot.admin.server.domain.entities.InstanceRepository;
 import de.codecentric.boot.admin.server.notify.CompositeNotifier;
@@ -19,26 +14,18 @@ import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunctio
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.client.RestTemplate;
 
-import javax.mail.internet.MimeMessage;
-import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static com.tsintergy.enums.SbaInstanceStatus.*;
 
@@ -83,8 +70,7 @@ public class NotifierConfig {
             //离线持续通知
             RemindingNotifier notifier = new RemindingNotifier(filteringNotifier(), this.repository);
             notifier.setReminderStatuses(new String[]{DOWN.name(), OFFLINE.name(), UP.name()});
-            //10分钟通知一次
-            notifier.setReminderPeriod(remindingProperties.getReminderPeriod());
+            notifier.setReminderPeriod(remindingProperties.getKeepPeriod());
             notifier.setCheckReminderInverval(remindingProperties.getCheckReminderInterval());
             return notifier;
         }
@@ -95,11 +81,11 @@ public class NotifierConfig {
             AdminServerNotifierAutoConfiguration.CompositeNotifierConfiguration.class,
             ReminderNotifierConfiguration.class})
     @Lazy(false)
-    public static class DingtalkNotifierConfig {
+    public static class MonitorNotifierConfig {
 
         private final InstanceRepository repository;
 
-        public DingtalkNotifierConfig(InstanceRepository repository) {
+        public MonitorNotifierConfig(InstanceRepository repository) {
             this.repository = repository;
         }
 
@@ -110,9 +96,9 @@ public class NotifierConfig {
         }
 
         @Bean
-        @ConditionalOnBean({DingtalkProperties.class, RestTemplate.class})
-        public DingtalkNotifier dingtalkNotifier() {
-            return new DingtalkNotifier(repository);
+        @ConditionalOnBean({RemindingProperties.class, DingtalkProperties.class, RestTemplate.class})
+        public StatusChangeNotifier statusChangeNotifier(RemindingProperties remindingProperties) {
+            return new StatusChangeNotifier(repository, new DefaultKeepingMonitor(remindingProperties.getNotificationPeriod(), remindingProperties.getKeepPeriod()));
         }
 
         @Bean

@@ -19,8 +19,19 @@ import java.time.Duration;
 @Data
 public class RemindingProperties {
 
+    /**
+     * 检查周期
+     */
     private Duration checkReminderInterval = Duration.ofSeconds(10);
 
-    private Duration reminderPeriod = Duration.ofMinutes(10);
+    /**
+     * 状态保持周期
+     */
+    private Duration keepPeriod = Duration.ofMinutes(2);
+
+    /**
+     * 消息发送周期
+     */
+    private Duration notificationPeriod = Duration.ofMinutes(10);
 
 }

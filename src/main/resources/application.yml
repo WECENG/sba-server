@@ -22,8 +22,9 @@ spring:
         status-interval: 10s
       notify:
         reminder:
-          checkReminderInterval: ${spring.boot.admin.monitor.status-interval}
-          reminderPeriod: 1m
+          check-reminder-interval: ${spring.boot.admin.monitor.status-interval}
+          keep-period: 20s
+          notification-period: 2m
         jvm:
           monitor:
             spare-non-heap: 2000

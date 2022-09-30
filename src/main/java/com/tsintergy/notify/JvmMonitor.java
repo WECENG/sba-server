@@ -19,7 +19,6 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -32,7 +31,7 @@ import java.util.Objects;
  */
 @Component
 @Slf4j
-public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeFilterFunction {
+public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchangeFilterFunction {
 
     @Autowired
     private RestTemplate restTemplate;
@@ -48,24 +47,12 @@ public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeF
                       JvmMonitorProperties jvmMonitorProperties,
                       DingtalkProperties dingtalkProperties,
                       RemindingProperties remindingProperties) {
+        super(remindingProperties.getNotificationPeriod(), remindingProperties.getKeepPeriod());
         this.restTemplate = restTemplate;
         this.jvmMonitorProperties = jvmMonitorProperties;
         this.dingtalkProperties = dingtalkProperties;
-        setReminderPeriod(remindingProperties.getReminderPeriod());
     }
 
-    /**
-     * 更新持续状态
-     *
-     * @param instance 实例
-     */
-    protected void updateOrNotReminding(Instance instance) {
-        String instanceId = instance.getId().getValue();
-        if (!isReminding(instanceId)) {
-            setReminding(instanceId, true);
-            setStartRemind(instanceId);
-        }
-    }
 
     /**
      * 是否需要警告
@@ -107,42 +94,29 @@ public class JvmMonitor extends AbsRemindingMonitor implements InstanceExchangeF
     public Mono<ClientResponse> filter(Instance instance, ClientRequest request, ExchangeFunction next) {
         return next.exchange(request).doOnSubscribe((s) -> {
             if (request.url().getPath().contains(JvmRequestUtil.HEALTH_URI)) {
-                try {
-                    getReminders().putIfAbsent(instance.getId().getValue(), new Reminder(false, Instant.now()));
-                    BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                    BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                    BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                    BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                    BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                    BigDecimal spareHead = BigDecimalFunctions.subtract(committedHeap, usedHeap);
-                    BigDecimal spareCommitHead = BigDecimalFunctions.subtract(maxHeap, committedHeap);
-                    BigDecimal spareMaxHead = BigDecimalFunctions.subtract(maxHeap, usedHeap);
-                    BigDecimal sparedNonHead = BigDecimalFunctions.subtract(maxNonHeap, usedNonHeap);
-                    JvmMemoryInfo jvmMemoryInfo = JvmMemoryInfo.builder()
-                            .maxHeap(maxHeap)
-                            .usedHeap(usedHeap)
-                            .committedHeap(committedHeap)
-                            .maxNonHeap(maxNonHeap)
-                            .usedNonHeap(usedNonHeap)
-                            .spareHead(spareHead)
-                            .spareCommitHead(spareCommitHead)
-                            .spareMaxHead(spareMaxHead)
-                            .spareNonHeap(sparedNonHead)
-                            .build();
-                    String jvmContent = DingtalkRequestUtil.buildJvmContent(instance, jvmMemoryInfo);
-
-                    if (shouldAlarm(jvmMemoryInfo)) {
-                        updateOrNotReminding(instance);
-                        if (shouldNotify(instance.getId().getValue())) {
-                            DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, jvmContent);
-                            reset(instance.getId().getValue());
-                        }
-                    } else {
-                        reset(instance.getId().getValue());
-                    }
-                } catch (Exception e) {
-                    log.error("jvm信息监控异常,详情:", e);
-                }
+                BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                BigDecimal spareHead = BigDecimalFunctions.subtract(committedHeap, usedHeap);
+                BigDecimal spareCommitHead = BigDecimalFunctions.subtract(maxHeap, committedHeap);
+                BigDecimal spareMaxHead = BigDecimalFunctions.subtract(maxHeap, usedHeap);
+                BigDecimal sparedNonHead = BigDecimalFunctions.subtract(maxNonHeap, usedNonHeap);
+                JvmMemoryInfo jvmMemoryInfo = JvmMemoryInfo.builder()
+                        .maxHeap(maxHeap)
+                        .usedHeap(usedHeap)
+                        .committedHeap(committedHeap)
+                        .maxNonHeap(maxNonHeap)
+                        .usedNonHeap(usedNonHeap)
+                        .spareHead(spareHead)
+                        .spareCommitHead(spareCommitHead)
+                        .spareMaxHead(spareMaxHead)
+                        .spareNonHeap(sparedNonHead)
+                        .build();
+                String jvmContent = DingtalkRequestUtil.buildJvmContent(instance, jvmMemoryInfo);
+                String instanceId = instance.getId().getValue();
+                doMonitor(shouldAlarm(jvmMemoryInfo), instanceId, (instId) -> DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, jvmContent));
             }
         });
     }
