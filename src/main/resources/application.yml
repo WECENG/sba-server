@@ -16,6 +16,11 @@ spring:
 #    username: mailUsername
 #    #客户端授权码
 #    password: mailPassword
+  security:
+    user:
+      name: admin
+      password: qinghua123@
+      roles: ADMIN
   boot:
     admin:
       monitor:

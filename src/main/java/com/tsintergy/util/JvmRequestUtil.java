@@ -4,8 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.common.utils.Objects;
 import com.tsieframework.core.base.math.BigDecimalFunctions;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -41,10 +40,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
+     * @param headers      请求头
      * @return 堆内存最大值
      */
-    public static BigDecimal getMaxHeap(RestTemplate restTemplate, String serviceUrl) {
-        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, HEAP_TAG);
+    public static BigDecimal getMaxHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
+        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, HEAP_TAG, headers);
     }
 
     /**
@@ -52,10 +52,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
+     * @param headers      请求头
      * @return 已使用堆内存
      */
-    public static BigDecimal getUsedHeap(RestTemplate restTemplate, String serviceUrl) {
-        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, HEAP_TAG);
+    public static BigDecimal getUsedHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
+        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, HEAP_TAG, headers);
     }
 
     /**
@@ -63,10 +64,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
+     * @param headers      请求头
      * @return 已分配堆内存
      */
-    public static BigDecimal getCommittedHeap(RestTemplate restTemplate, String serviceUrl) {
-        return getJvmHeap(restTemplate, serviceUrl, COMMITTED_HEAP_URI, HEAP_TAG);
+    public static BigDecimal getCommittedHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
+        return getJvmHeap(restTemplate, serviceUrl, COMMITTED_HEAP_URI, HEAP_TAG, headers);
     }
 
     /**
@@ -74,10 +76,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
+     * @param headers      请求头
      * @return 非堆内存最大值
      */
-    public static BigDecimal getMaxNonHeap(RestTemplate restTemplate, String serviceUrl) {
-        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, NON_HEAP_TAG);
+    public static BigDecimal getMaxNonHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
+        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, NON_HEAP_TAG, headers);
     }
 
     /**
@@ -85,10 +88,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
+     * @param headers      请求头
      * @return 已使用非堆内存
      */
-    public static BigDecimal getUsedNonHeap(RestTemplate restTemplate, String serviceUrl) {
-        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, NON_HEAP_TAG);
+    public static BigDecimal getUsedNonHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
+        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, NON_HEAP_TAG, headers);
     }
 
     /**
@@ -98,20 +102,24 @@ public class JvmRequestUtil {
      * @param serviceUrl   服务地址
      * @param uri          uri
      * @param tag          标签参数
+     * @param headers      请求头
      * @return
      */
-    public static BigDecimal getJvmHeap(RestTemplate restTemplate, String serviceUrl, String uri, String tag) {
+    public static BigDecimal getJvmHeap(RestTemplate restTemplate, String serviceUrl, String uri, String tag, HttpHeaders headers) {
         String reqUrl = serviceUrl + uri + "?" + tag;
-        ResponseEntity<String> entity = restTemplate.getForEntity(reqUrl, String.class);
+        HttpEntity<JSONObject> httpEntity = new HttpEntity<>(headers);
+        ResponseEntity<String> entity = restTemplate.exchange(reqUrl, HttpMethod.GET, httpEntity, String.class);
         if (entity.getStatusCode() == HttpStatus.OK && entity.hasBody()) {
             String body = entity.getBody();
             JSONObject parse = (JSONObject) JSONObject.parse(body);
             if (Objects.nonNull(parse)) {
                 JSONArray jsonArray = parse.getJSONArray(MEASUREMENTS);
-                JSONObject jsonObject = jsonArray.getJSONObject(0);
-                BigDecimal maxHeapBytes = jsonObject.getBigDecimal(VALUE);
-                BigDecimal unit = new BigDecimal(1024 * 1024);
-                return BigDecimalFunctions.divide(maxHeapBytes, unit);
+                if (Objects.nonNull(jsonArray)) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    BigDecimal maxHeapBytes = jsonObject.getBigDecimal(VALUE);
+                    BigDecimal unit = new BigDecimal(1024 * 1024);
+                    return BigDecimalFunctions.divide(maxHeapBytes, unit);
+                }
             }
         }
         return null;

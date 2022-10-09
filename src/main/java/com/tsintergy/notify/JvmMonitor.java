@@ -11,6 +11,7 @@ import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -94,11 +95,12 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
     public Mono<ClientResponse> filter(Instance instance, ClientRequest request, ExchangeFunction next) {
         return next.exchange(request).doOnSubscribe((s) -> {
             if (request.url().getPath().contains(JvmRequestUtil.HEALTH_URI)) {
-                BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
-                BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl());
+                HttpHeaders headers = request.headers();
+                BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
+                BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
+                BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
+                BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
+                BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
                 BigDecimal spareHead = BigDecimalFunctions.subtract(committedHeap, usedHeap);
                 BigDecimal spareCommitHead = BigDecimalFunctions.subtract(maxHeap, committedHeap);
                 BigDecimal spareMaxHead = BigDecimalFunctions.subtract(maxHeap, usedHeap);
