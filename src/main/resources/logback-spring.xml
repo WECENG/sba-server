@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
+    <springProperty scope="context" name="logPath" source="logging.file.path"/>
     <appender name="consoleLog" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%d - %msg%n</pattern>
@@ -17,7 +18,7 @@
         <!--滚动策略-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--路径-->
-            <fileNamePattern>${logging.file.path}/info.%d.log</fileNamePattern>
+            <fileNamePattern>${logPath}/info.%d.log</fileNamePattern>
         </rollingPolicy>
     </appender>
     <appender name="fileErrorLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -30,7 +31,7 @@
         <!--滚动策略-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--路径-->
-            <fileNamePattern>${logging.file.path}/error.%d.log</fileNamePattern>
+            <fileNamePattern>${logPath}/error.%d.log</fileNamePattern>
         </rollingPolicy>
     </appender>
     <root level="info">

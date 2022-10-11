@@ -54,6 +54,8 @@ springboot admin 提供了应用信息监控，包括应用CPU、JVM、线程、
                token: ${USERCENTER_TOKEN:eyJhbGciOiJIUzI1NiJ9.eyJ1SWQiOiJlNGZkMzM4YTgzYmIxZDNjMDE4M2JiNGZlMTY5MDAwMyIsInN1YiI6ImdyaWQtc2JhIiwidElkIjoiODI4MDgxODc3OWNiODI0NTAxNzljYjg0MjJhMzAwMDAiLCJzSWQiOiJhYjBmYTViNTlmZDc0NDBmODNhMGI2YWY4MDBiMGJjZCIsImlhdCI6MTY2NTI5NTcyMH0.fuyTOmKPLKBTLv1VOfLXc5rsmDtI9B74UAFm-A7LEVA}
              serviceUrl: ${SBA_CLIENT:http://127.0.0.1:8080}
            url: ${SBA_SERVER:http://127.0.0.1:8080}
+           username: ${SBA_SERVER_USERNAME:admin}
+           password: ${SBA_SERVER_PASSWORD:qinghua123@}
    management:
      endpoints:
        web:
@@ -68,14 +70,16 @@ springboot admin 提供了应用信息监控，包括应用CPU、JVM、线程、
        elasticsearch:
          enabled: false
    ```
-
+   
    - SBA_CLIENT_ENABLE：是否启用`springboot admin client`
    - SBA_CLIENT：`springboot admin client`服务地址，配置`rainbond`**前端应用地址**。例如网架图应用（开发环境）配置为`https://adssx-test-gzdevops3.tsintergy.com/grid/`
    - SBA_SERVER：`springboot admin server`服务地址，请参考[spring boot admin 服务端地址](##Springboot Admin Server)
    - USERCENTER_TOKEN：用户中心认证token，**需要创建一个账号，并分配该应用权限，然后去登陆，然后从浏览器cookie中获取key为Authorization的值，将该值配置上去。切记别在页面上登出，直接关闭浏览器的该tag即可，因为token中包含了会话id，登出后该token将会失效**
-
+   - SBA_SERVER_USERNAME: 服务端账号，见[spring boot admin 服务端地址](##Springboot Admin Server)
+   - SBA_SERVER_PASSWORD: 服务端密码，见[spring boot admin 服务端地址](##Springboot Admin Server)
+   
    完成`application-config-sba.yml`文件配置后，需要在`application-include-web-run-*.myl`文件中`include`该`yml`文件。
-
+   
 3. 配置token获取方式
    如果应用集成了`securityng`,默认`token`获取方式是从`token`中获取，但是`sba-server`只能把`token`放在`http header`中，`application-config-tsie-usercenter.yml`文件中配置如下，将`token`获取方式改为从`http header`或 `cookie`中获取：
 

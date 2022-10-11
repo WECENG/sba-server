@@ -49,6 +49,3 @@ spring:
         core-size: 5
         max-size: 10
         queue-capacity: 100
-logging:
-  file:
-    path: /var/log/sba-server

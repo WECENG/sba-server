@@ -1,0 +1,6 @@
+logging:
+  file:
+    path: /var/log/${spring.application.name}
+spring:
+  application:
+    name: sba-server
