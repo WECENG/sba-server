@@ -1,13 +1,6 @@
 package com.tsintergy.notify;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.nacos.common.constant.HttpHeaderConsts;
-import com.alibaba.nacos.common.http.param.MediaType;
 import com.tsintergy.configure.DingtalkProperties;
-import com.tsintergy.configure.RemindingProperties;
-import com.tsintergy.message.DingtalkMessage;
-import com.tsintergy.message.DingtalkMessageBuilder;
-import com.tsintergy.message.DingtalkTextMessage;
 import com.tsintergy.util.DingtalkRequestUtil;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.domain.entities.InstanceRepository;
@@ -16,21 +9,16 @@ import de.codecentric.boot.admin.server.domain.events.InstanceEvent;
 import de.codecentric.boot.admin.server.domain.events.InstanceStatusChangedEvent;
 import de.codecentric.boot.admin.server.domain.values.InstanceId;
 import de.codecentric.boot.admin.server.notify.AbstractEventNotifier;
-import de.codecentric.boot.admin.server.notify.AbstractStatusChangeNotifier;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-import static com.tsintergy.enums.SbaInstanceStatus.*;
+import static com.tsintergy.enums.SbaInstanceStatus.DOWN;
+import static com.tsintergy.enums.SbaInstanceStatus.OFFLINE;
 
 /**
  * <p>

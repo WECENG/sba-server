@@ -2,25 +2,26 @@ package com.tsintergy.util;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.format.FastDateFormat;
+import cn.hutool.core.lang.Assert;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.nacos.common.constant.HttpHeaderConsts;
-import com.alibaba.nacos.common.http.param.MediaType;
-import com.tsieframework.core.base.format.datetime.DateFormatType;
-import com.tsieframework.core.base.format.datetime.DateUtils;
-import com.tsieframework.core.base.util.TsieAssert;
 import com.tsintergy.configure.DingtalkProperties;
 import com.tsintergy.message.DingtalkMessage;
 import com.tsintergy.message.DingtalkMessageBuilder;
 import com.tsintergy.message.DingtalkTextMessage;
 import com.tsintergy.message.JvmMemoryInfo;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
+import io.micrometer.core.instrument.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
+
+import static cn.hutool.core.date.format.FastDateFormat.MEDIUM;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 /**
  * <p>
@@ -40,7 +41,7 @@ public class DingtalkRequestUtil {
      */
     public static String buildDingtalkUrl(DingtalkProperties dingtalkProperties) throws Exception {
         StringBuilder dingtalkUrlBuilder = new StringBuilder(dingtalkProperties.getUrl());
-        TsieAssert.notNull(dingtalkProperties.getToken(), "请配置钉钉消息通知token!");
+        Assert.notNull(dingtalkProperties.getToken(), "请配置钉钉消息通知token!");
         if (StringUtils.isNotBlank(dingtalkProperties.getToken())) {
             dingtalkUrlBuilder.append("?");
             dingtalkUrlBuilder.append("access_token=");
@@ -75,11 +76,11 @@ public class DingtalkRequestUtil {
         contentBuilder.append("\n");
         contentBuilder.append("下线时间：");
         Date downDate = Date.from(instance.getStatusTimestamp());
-        contentBuilder.append(DateUtils.date2String(downDate, DateFormatType.DATE_FORMAT_STR));
+        contentBuilder.append(FastDateFormat.getDateTimeInstance(MEDIUM, MEDIUM).format(downDate));
         contentBuilder.append("\n");
         contentBuilder.append("当前时间：");
         Date nowDate = new Date();
-        contentBuilder.append(DateUtils.date2String(nowDate, DateFormatType.DATE_FORMAT_STR));
+        contentBuilder.append(FastDateFormat.getDateTimeInstance(MEDIUM, MEDIUM).format(nowDate));
         contentBuilder.append("\n");
         contentBuilder.append("持续时间：");
         contentBuilder.append(DateUtil.between(nowDate, downDate, DateUnit.MINUTE, true));
@@ -106,7 +107,7 @@ public class DingtalkRequestUtil {
         contentBuilder.append("\n");
         contentBuilder.append("上线时间：");
         Date nowDate = new Date();
-        contentBuilder.append(DateUtils.date2String(nowDate, DateFormatType.DATE_FORMAT_STR));
+        contentBuilder.append(FastDateFormat.getDateTimeInstance(MEDIUM, MEDIUM).format(nowDate));
         contentBuilder.append("\n");
         contentBuilder.append("详情：");
         contentBuilder.append(JSON.toJSONString(instance));
@@ -179,7 +180,7 @@ public class DingtalkRequestUtil {
         try {
             String dingtalkUrl = buildDingtalkUrl(dingtalkProperties);
             HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaderConsts.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+            headers.add(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
             DingtalkTextMessage textMessage = DingtalkTextMessage.builder()
                     .content(content)
                     .build();

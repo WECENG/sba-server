@@ -1,11 +1,6 @@
 server:
   port: 8080
 debug: true
-logging:
-  #  log4j2的文件名不能使用log4j.xml否则会与spring boot 默认的冲突导致配置不生效
-  config: classpath:sba_log4j2.xml
-tsie:
-  application-type: webSingle
 spring:
   redis:
     host: 127.0.0.1
@@ -41,13 +36,19 @@ spring:
 #          to: toMailUsername
 #          #必须与登陆的邮箱账号保持一致
 #          from: fromMailUserName
+  cloud:
+    zookeeper:
+      discovery:
+        enabled: true
+        instance-host: 127.0.0.1
+        instance-port: 2181
+        register: false
   task:
     execution:
       pool:
         core-size: 5
         max-size: 10
         queue-capacity: 100
-dubbo:
-  registry:
-    address: zookeeper://127.0.0.1:2181
-    timeout: 10000
+logging:
+  file:
+    path: /var/log/sba-server

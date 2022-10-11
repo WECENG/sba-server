@@ -2,12 +2,13 @@ package com.tsintergy.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.nacos.common.utils.Objects;
-import com.tsieframework.core.base.math.BigDecimalFunctions;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Objects;
 
 /**
  * <p>
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
  * @author chenwc@tsintergy.com
  * @since 2022/9/27 10:56
  */
+@Slf4j
 public class JvmRequestUtil {
 
     public static final String MEASUREMENTS = "measurements";
@@ -106,21 +108,25 @@ public class JvmRequestUtil {
      * @return
      */
     public static BigDecimal getJvmHeap(RestTemplate restTemplate, String serviceUrl, String uri, String tag, HttpHeaders headers) {
-        String reqUrl = serviceUrl + uri + "?" + tag;
-        HttpEntity<JSONObject> httpEntity = new HttpEntity<>(headers);
-        ResponseEntity<String> entity = restTemplate.exchange(reqUrl, HttpMethod.GET, httpEntity, String.class);
-        if (entity.getStatusCode() == HttpStatus.OK && entity.hasBody()) {
-            String body = entity.getBody();
-            JSONObject parse = (JSONObject) JSONObject.parse(body);
-            if (Objects.nonNull(parse)) {
-                JSONArray jsonArray = parse.getJSONArray(MEASUREMENTS);
-                if (Objects.nonNull(jsonArray)) {
-                    JSONObject jsonObject = jsonArray.getJSONObject(0);
-                    BigDecimal maxHeapBytes = jsonObject.getBigDecimal(VALUE);
-                    BigDecimal unit = new BigDecimal(1024 * 1024);
-                    return BigDecimalFunctions.divide(maxHeapBytes, unit);
+        try {
+            String reqUrl = serviceUrl + uri + "?" + tag;
+            HttpEntity<JSONObject> httpEntity = new HttpEntity<>(headers);
+            ResponseEntity<String> entity = restTemplate.exchange(reqUrl, HttpMethod.GET, httpEntity, String.class);
+            if (entity.getStatusCode() == HttpStatus.OK && entity.hasBody()) {
+                String body = entity.getBody();
+                JSONObject parse = (JSONObject) JSONObject.parse(body);
+                if (Objects.nonNull(parse)) {
+                    JSONArray jsonArray = parse.getJSONArray(MEASUREMENTS);
+                    if (Objects.nonNull(jsonArray)) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        BigDecimal maxHeapBytes = jsonObject.getBigDecimal(VALUE);
+                        BigDecimal unit = new BigDecimal(1024 * 1024);
+                        return Objects.isNull(maxHeapBytes) ? null : maxHeapBytes.divide(unit, 0, RoundingMode.HALF_UP);
+                    }
                 }
             }
+        }catch (Exception e){
+            log.error("jvm信息监控异常:", e);
         }
         return null;
     }

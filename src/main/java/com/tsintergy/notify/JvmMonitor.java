@@ -1,6 +1,5 @@
 package com.tsintergy.notify;
 
-import com.tsieframework.core.base.math.BigDecimalFunctions;
 import com.tsintergy.configure.DingtalkProperties;
 import com.tsintergy.configure.JvmMonitorProperties;
 import com.tsintergy.configure.RemindingProperties;
@@ -10,9 +9,7 @@ import com.tsintergy.util.JvmRequestUtil;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunction;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -30,18 +27,14 @@ import java.util.Objects;
  * @author chenwc@tsintergy.com
  * @since 2022/9/27 19:23
  */
-@Component
 @Slf4j
 public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchangeFilterFunction {
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private JvmMonitorProperties jvmMonitorProperties;
+    private final JvmMonitorProperties jvmMonitorProperties;
 
-    @Autowired
-    private DingtalkProperties dingtalkProperties;
+    private final DingtalkProperties dingtalkProperties;
 
 
     public JvmMonitor(RestTemplate restTemplate,
@@ -65,27 +58,27 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
         boolean alarm = false;
         if (Objects.nonNull(jvmMonitorProperties.getSpareHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getSpareHead()) &&
-                BigDecimalFunctions.lt(jvmMemoryInfo.getSpareHead(), jvmMonitorProperties.getSpareHeap())) {
+                jvmMemoryInfo.getSpareHead().compareTo(jvmMonitorProperties.getSpareHeap()) <= 0) {
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getSpareCommitHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getCommittedHeap()) &&
-                BigDecimalFunctions.lt(jvmMemoryInfo.getCommittedHeap(), jvmMonitorProperties.getSpareCommitHeap())) {
+                jvmMemoryInfo.getCommittedHeap().compareTo(jvmMonitorProperties.getSpareCommitHeap()) <= 0) {
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getSpareMaxHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getMaxHeap()) &&
-                BigDecimalFunctions.lt(jvmMemoryInfo.getMaxHeap(), jvmMonitorProperties.getSpareMaxHeap())) {
+                jvmMemoryInfo.getMaxHeap().compareTo(jvmMonitorProperties.getSpareMaxHeap()) <= 0) {
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getUsedNonHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getUsedNonHeap()) &&
-                BigDecimalFunctions.gt(jvmMemoryInfo.getUsedNonHeap(), jvmMonitorProperties.getUsedNonHeap())) {
+                jvmMemoryInfo.getUsedNonHeap().compareTo(jvmMonitorProperties.getUsedNonHeap()) >= 0) {
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getSpareNonHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getSpareNonHeap()) &&
-                BigDecimalFunctions.lt(jvmMemoryInfo.getSpareNonHeap(), jvmMonitorProperties.getSpareNonHeap())) {
+                jvmMemoryInfo.getSpareNonHeap().compareTo(jvmMonitorProperties.getSpareNonHeap()) <= 0) {
             alarm = true;
         }
         return alarm;
@@ -101,10 +94,10 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
                 BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
                 BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
                 BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
-                BigDecimal spareHead = BigDecimalFunctions.subtract(committedHeap, usedHeap);
-                BigDecimal spareCommitHead = BigDecimalFunctions.subtract(maxHeap, committedHeap);
-                BigDecimal spareMaxHead = BigDecimalFunctions.subtract(maxHeap, usedHeap);
-                BigDecimal sparedNonHead = BigDecimalFunctions.subtract(maxNonHeap, usedNonHeap);
+                BigDecimal spareHead = Objects.isNull(committedHeap) || Objects.isNull(usedHeap) ? null : committedHeap.subtract(usedHeap);
+                BigDecimal spareCommitHead = Objects.isNull(maxHeap) || Objects.isNull(committedHeap) ? null : maxHeap.subtract(committedHeap);
+                BigDecimal spareMaxHead = Objects.isNull(maxHeap) || Objects.isNull(usedHeap) ? null : maxHeap.subtract(usedHeap);
+                BigDecimal sparedNonHead = Objects.isNull(maxNonHeap) || Objects.isNull(usedNonHeap) ? null : maxNonHeap.subtract(usedNonHeap);
                 JvmMemoryInfo jvmMemoryInfo = JvmMemoryInfo.builder()
                         .maxHeap(maxHeap)
                         .usedHeap(usedHeap)

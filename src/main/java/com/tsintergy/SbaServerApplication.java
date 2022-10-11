@@ -1,8 +1,8 @@
 package com.tsintergy;
 
-import com.tsieframework.boot.autoconfigure.TsieBootApplication;
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 /**
@@ -13,7 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
  * @author chenwc@tsintergy.com
  * @since 2022/9/20 14:28
  */
-@TsieBootApplication
+@SpringBootApplication
 @EnableAdminServer
 @EnableWebSecurity
 public class SbaServerApplication {
