@@ -1,14 +1,20 @@
 package com.tsintergy.util;
 
+import ch.qos.logback.core.net.server.Client;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.ClientRequest;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -42,11 +48,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
-     * @param headers      请求头
+     * @param request      原始请求
      * @return 堆内存最大值
      */
-    public static BigDecimal getMaxHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
-        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, HEAP_TAG, headers);
+    public static BigDecimal getMaxHeap(RestTemplate restTemplate, String serviceUrl, ClientRequest request) {
+        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, HEAP_TAG, request);
     }
 
     /**
@@ -54,11 +60,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
-     * @param headers      请求头
+     * @param request      原始请求
      * @return 已使用堆内存
      */
-    public static BigDecimal getUsedHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
-        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, HEAP_TAG, headers);
+    public static BigDecimal getUsedHeap(RestTemplate restTemplate, String serviceUrl, ClientRequest request) {
+        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, HEAP_TAG, request);
     }
 
     /**
@@ -66,11 +72,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
-     * @param headers      请求头
+     * @param request      原始请求
      * @return 已分配堆内存
      */
-    public static BigDecimal getCommittedHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
-        return getJvmHeap(restTemplate, serviceUrl, COMMITTED_HEAP_URI, HEAP_TAG, headers);
+    public static BigDecimal getCommittedHeap(RestTemplate restTemplate, String serviceUrl, ClientRequest request) {
+        return getJvmHeap(restTemplate, serviceUrl, COMMITTED_HEAP_URI, HEAP_TAG, request);
     }
 
     /**
@@ -78,11 +84,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
-     * @param headers      请求头
+     * @param request      原始请求
      * @return 非堆内存最大值
      */
-    public static BigDecimal getMaxNonHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
-        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, NON_HEAP_TAG, headers);
+    public static BigDecimal getMaxNonHeap(RestTemplate restTemplate, String serviceUrl, ClientRequest request) {
+        return getJvmHeap(restTemplate, serviceUrl, MAX_HEAP_URI, NON_HEAP_TAG, request);
     }
 
     /**
@@ -90,11 +96,11 @@ public class JvmRequestUtil {
      *
      * @param restTemplate rest对象
      * @param serviceUrl   实例服务url
-     * @param headers      请求头
+     * @param request      原始请求
      * @return 已使用非堆内存
      */
-    public static BigDecimal getUsedNonHeap(RestTemplate restTemplate, String serviceUrl, HttpHeaders headers) {
-        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, NON_HEAP_TAG, headers);
+    public static BigDecimal getUsedNonHeap(RestTemplate restTemplate, String serviceUrl, ClientRequest request) {
+        return getJvmHeap(restTemplate, serviceUrl, USED_HEAP_URI, NON_HEAP_TAG, request);
     }
 
     /**
@@ -104,12 +110,17 @@ public class JvmRequestUtil {
      * @param serviceUrl   服务地址
      * @param uri          uri
      * @param tag          标签参数
-     * @param headers      请求头
+     * @param request      原始请求
      * @return
      */
-    public static BigDecimal getJvmHeap(RestTemplate restTemplate, String serviceUrl, String uri, String tag, HttpHeaders headers) {
+    public static BigDecimal getJvmHeap(RestTemplate restTemplate, String serviceUrl, String uri, String tag, ClientRequest request) {
         try {
             String reqUrl = serviceUrl + uri + "?" + tag;
+            HttpHeaders headers = new HttpHeaders();
+            headers.addAll(request.headers());
+            List<String> cookies = new ArrayList<>();
+            request.cookies().forEach((key, name) -> cookies.add(key + "=" + String.join(";", name)));
+            headers.putIfAbsent(HttpHeaders.COOKIE, cookies);
             HttpEntity<JSONObject> httpEntity = new HttpEntity<>(headers);
             ResponseEntity<String> entity = restTemplate.exchange(reqUrl, HttpMethod.GET, httpEntity, String.class);
             if (entity.getStatusCode() == HttpStatus.OK && entity.hasBody()) {
@@ -125,7 +136,7 @@ public class JvmRequestUtil {
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("jvm信息监控异常:", e);
         }
         return null;

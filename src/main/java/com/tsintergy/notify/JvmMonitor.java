@@ -88,12 +88,11 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
     public Mono<ClientResponse> filter(Instance instance, ClientRequest request, ExchangeFunction next) {
         return next.exchange(request).doOnSubscribe((s) -> {
             if (request.url().getPath().contains(JvmRequestUtil.HEALTH_URI)) {
-                HttpHeaders headers = request.headers();
-                BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
-                BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
-                BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
-                BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
-                BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), headers);
+                BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl(), request);
+                BigDecimal usedHeap = JvmRequestUtil.getUsedHeap(restTemplate, instance.getRegistration().getManagementUrl(), request);
+                BigDecimal committedHeap = JvmRequestUtil.getCommittedHeap(restTemplate, instance.getRegistration().getManagementUrl(), request);
+                BigDecimal maxNonHeap = JvmRequestUtil.getMaxNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), request);
+                BigDecimal usedNonHeap = JvmRequestUtil.getUsedNonHeap(restTemplate, instance.getRegistration().getManagementUrl(), request);
                 BigDecimal spareHead = Objects.isNull(committedHeap) || Objects.isNull(usedHeap) ? null : committedHeap.subtract(usedHeap);
                 BigDecimal spareCommitHead = Objects.isNull(maxHeap) || Objects.isNull(committedHeap) ? null : maxHeap.subtract(committedHeap);
                 BigDecimal spareMaxHead = Objects.isNull(maxHeap) || Objects.isNull(usedHeap) ? null : maxHeap.subtract(usedHeap);

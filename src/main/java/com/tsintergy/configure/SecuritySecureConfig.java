@@ -3,13 +3,16 @@ package com.tsintergy.configure;
 import de.codecentric.boot.admin.server.config.AdminServerProperties;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.web.client.HttpHeadersProvider;
+import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.reactive.function.client.ClientRequest;
 
 import java.util.Map;
 
@@ -52,12 +55,16 @@ public class SecuritySecureConfig extends WebSecurityConfigurerAdapter {
 
 
     @Bean
-    public HttpHeadersProvider customHttpHeadersProvider() {
-        return (instance) -> {
-            HttpHeaders httpHeaders = new HttpHeaders();
+    @Order(-1)
+    public InstanceExchangeFilterFunction headAndCookieWithToken() {
+        return (instance, request, next) -> {
             String token = getMetadataValue(instance, TOKEN);
-            httpHeaders.add(HttpHeaders.AUTHORIZATION, token);
-            return httpHeaders;
+            ClientRequest clientRequest = ClientRequest.from(request)
+                    .cookie(HttpHeaders.AUTHORIZATION, token)
+                    .header(HttpHeaders.AUTHORIZATION, token)
+                    .build();
+            return next.exchange(clientRequest).doOnSubscribe(s -> {
+            });
         };
     }
 
