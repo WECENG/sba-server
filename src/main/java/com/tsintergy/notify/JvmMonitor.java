@@ -8,6 +8,8 @@ import com.tsintergy.util.DingtalkRequestUtil;
 import com.tsintergy.util.JvmRequestUtil;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunction;
+import io.micrometer.core.lang.NonNull;
+import io.micrometer.core.lang.NonNullApi;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
@@ -17,6 +19,7 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.text.MessageFormat;
 import java.util.Objects;
 
 /**
@@ -60,32 +63,38 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
                 Objects.nonNull(jvmMemoryInfo.getSpareHead()) &&
                 jvmMemoryInfo.getSpareHead().compareTo(jvmMonitorProperties.getSpareHeap()) <= 0) {
             alarm = true;
+            jvmMemoryInfo.setWarningTitle(MessageFormat.format("剩余可用堆内存小于{0}M", jvmMonitorProperties.getSpareHeap()));
         }
         if (Objects.nonNull(jvmMonitorProperties.getSpareCommitHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getCommittedHeap()) &&
                 jvmMemoryInfo.getCommittedHeap().compareTo(jvmMonitorProperties.getSpareCommitHeap()) <= 0) {
+            jvmMemoryInfo.setWarningTitle(MessageFormat.format("剩余可分配堆内存小于{0}M", jvmMonitorProperties.getSpareCommitHeap()));
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getSpareMaxHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getMaxHeap()) &&
                 jvmMemoryInfo.getMaxHeap().compareTo(jvmMonitorProperties.getSpareMaxHeap()) <= 0) {
+            jvmMemoryInfo.setWarningTitle(MessageFormat.format("剩余最大可用堆内存小于{0}M", jvmMonitorProperties.getSpareMaxHeap()));
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getUsedNonHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getUsedNonHeap()) &&
                 jvmMemoryInfo.getUsedNonHeap().compareTo(jvmMonitorProperties.getUsedNonHeap()) >= 0) {
+            jvmMemoryInfo.setWarningTitle(MessageFormat.format("已使用非堆空间大于{0}M", jvmMonitorProperties.getUsedNonHeap()));
             alarm = true;
         }
         if (Objects.nonNull(jvmMonitorProperties.getSpareNonHeap()) &&
                 Objects.nonNull(jvmMemoryInfo.getSpareNonHeap()) &&
                 jvmMemoryInfo.getSpareNonHeap().compareTo(jvmMonitorProperties.getSpareNonHeap()) <= 0) {
+            jvmMemoryInfo.setWarningTitle(MessageFormat.format("剩余可用非堆空间小于{0}M", jvmMonitorProperties.getSpareNonHeap()));
             alarm = true;
         }
         return alarm;
     }
 
     @Override
-    public Mono<ClientResponse> filter(Instance instance, ClientRequest request, ExchangeFunction next) {
+    @NonNull
+    public Mono<ClientResponse> filter(@NonNull Instance instance, @NonNull ClientRequest request, ExchangeFunction next) {
         return next.exchange(request).doOnSubscribe((s) -> {
             if (request.url().getPath().contains(JvmRequestUtil.HEALTH_URI)) {
                 BigDecimal maxHeap = JvmRequestUtil.getMaxHeap(restTemplate, instance.getRegistration().getManagementUrl(), request);
@@ -108,9 +117,10 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
                         .spareMaxHead(spareMaxHead)
                         .spareNonHeap(sparedNonHead)
                         .build();
-                String jvmContent = DingtalkRequestUtil.buildJvmContent(instance, jvmMemoryInfo);
                 String instanceId = instance.getId().getValue();
-                doMonitor(shouldAlarm(jvmMemoryInfo), instanceId, (instId) -> DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, jvmContent));
+                doMonitor(shouldAlarm(jvmMemoryInfo), instanceId, (instId) ->
+                        DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties,
+                                DingtalkRequestUtil.buildJvmContent(instance, jvmMemoryInfo)));
             }
         });
     }

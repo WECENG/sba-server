@@ -76,10 +76,12 @@ public class StatusChangeNotifier extends AbstractEventNotifier {
                 String instanceId = instance.getId().getValue();
                 if (downOrOffline) {
                     keepingMonitor.doMonitor(true, instanceId, (instId) ->
-                            DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, DingtalkRequestUtil.buildDownOrOfflineContent(instance)));
+                            DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties,
+                                    DingtalkRequestUtil.buildDownOrOfflineContent(instance)));
                 }
                 if (up && lastDownOrOffline) {
-                    DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, DingtalkRequestUtil.buildDownToUpContent(instance));
+                    DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties,
+                            DingtalkRequestUtil.buildDownToUpContent(instance));
                 }
             }
         });

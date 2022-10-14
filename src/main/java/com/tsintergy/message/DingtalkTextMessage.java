@@ -1,9 +1,8 @@
 package com.tsintergy.message;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.tsintergy.enums.DingtalkMessageType;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 /**
  * <p>
@@ -13,15 +12,14 @@ import lombok.NoArgsConstructor;
  * @author chenwc@tsintergy.com
  * @since 2022/9/26 11:00
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class DingtalkTextMessage {
+@SuperBuilder
+public class DingtalkTextMessage extends DingtalkMessage{
 
-    /**
-     * 文本内容
-     */
-    private String content;
+    @Override
+    public String getMsgtype() {
+        return DingtalkMessageType.TEXT.getName();
+    }
 
 }

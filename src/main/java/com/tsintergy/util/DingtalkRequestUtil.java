@@ -6,10 +6,7 @@ import cn.hutool.core.date.format.FastDateFormat;
 import cn.hutool.core.lang.Assert;
 import com.alibaba.fastjson.JSON;
 import com.tsintergy.configure.DingtalkProperties;
-import com.tsintergy.message.DingtalkMessage;
-import com.tsintergy.message.DingtalkMessageBuilder;
-import com.tsintergy.message.DingtalkTextMessage;
-import com.tsintergy.message.JvmMemoryInfo;
+import com.tsintergy.message.*;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +15,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.MessageFormat;
 import java.util.Date;
 
-import static cn.hutool.core.date.format.FastDateFormat.MEDIUM;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 /**
@@ -33,6 +30,40 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
  */
 @Slf4j
 public class DingtalkRequestUtil {
+
+    /**
+     * 日期格式
+     */
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+    /**
+     * 默认标题
+     */
+    public static final String DEFAULT_TITLE = "应用告警";
+
+    /**
+     * 换行
+     */
+    public static final String LINE_FEED = "  \n";
+
+    /**
+     * 引用
+     */
+    public static final String QUOTE = ">";
+
+    /**
+     * 换行 + 引用
+     */
+    public static final String LINE_FEED_QUOTE = LINE_FEED + QUOTE;
+
+    /**
+     * 详情模版,markdown不支持
+     */
+    public static final String DETAIL_TEMPLATE =
+            "<details>\n" +
+                    "<summary>{0}</summary>\n" +
+                    "{1}\n" +
+                    "</details>";
 
     /**
      * 构建钉钉url
@@ -67,28 +98,26 @@ public class DingtalkRequestUtil {
      * @return 消息内容
      */
     public static String buildDownOrOfflineContent(Instance instance) {
-        StringBuilder contentBuilder = new StringBuilder();
-        contentBuilder.append(instance.getRegistration().getName());
-        contentBuilder.append("已下线");
-        contentBuilder.append("\n");
-        contentBuilder.append("应用地址：");
-        contentBuilder.append(instance.getRegistration().getServiceUrl());
-        contentBuilder.append("\n");
-        contentBuilder.append("下线时间：");
         Date downDate = Date.from(instance.getStatusTimestamp());
-        contentBuilder.append(FastDateFormat.getDateTimeInstance(MEDIUM, MEDIUM).format(downDate));
-        contentBuilder.append("\n");
-        contentBuilder.append("当前时间：");
         Date nowDate = new Date();
-        contentBuilder.append(FastDateFormat.getDateTimeInstance(MEDIUM, MEDIUM).format(nowDate));
-        contentBuilder.append("\n");
-        contentBuilder.append("持续时间：");
-        contentBuilder.append(DateUtil.between(nowDate, downDate, DateUnit.MINUTE, true));
-        contentBuilder.append("分钟");
-        contentBuilder.append("\n");
-        contentBuilder.append("详情：");
-        contentBuilder.append(JSON.toJSONString(instance));
-        return contentBuilder.toString();
+        return "## " +
+                instance.getRegistration().getName() +
+                "已下线" +
+                LINE_FEED_QUOTE +
+                "应用地址：" +
+                instance.getRegistration().getServiceUrl() +
+                LINE_FEED_QUOTE +
+                "下线时间：" +
+                FastDateFormat.getInstance(DATE_FORMAT).format(downDate) +
+                LINE_FEED_QUOTE +
+                "当前时间：" +
+                FastDateFormat.getInstance(DATE_FORMAT).format(nowDate) +
+                LINE_FEED_QUOTE +
+                "持续时间：" +
+                DateUtil.between(nowDate, downDate, DateUnit.MINUTE, true) +
+                "分钟" +
+                LINE_FEED_QUOTE +
+                MessageFormat.format(DETAIL_TEMPLATE, "详情信息", JSON.toJSONString(instance));
     }
 
     /**
@@ -98,20 +127,18 @@ public class DingtalkRequestUtil {
      * @return 消息内容
      */
     public static String buildDownToUpContent(Instance instance) {
-        StringBuilder contentBuilder = new StringBuilder();
-        contentBuilder.append(instance.getRegistration().getName());
-        contentBuilder.append("已重新上线");
-        contentBuilder.append("\n");
-        contentBuilder.append("应用地址：");
-        contentBuilder.append(instance.getRegistration().getServiceUrl());
-        contentBuilder.append("\n");
-        contentBuilder.append("上线时间：");
         Date nowDate = new Date();
-        contentBuilder.append(FastDateFormat.getDateTimeInstance(MEDIUM, MEDIUM).format(nowDate));
-        contentBuilder.append("\n");
-        contentBuilder.append("详情：");
-        contentBuilder.append(JSON.toJSONString(instance));
-        return contentBuilder.toString();
+        return "## " +
+                instance.getRegistration().getName() +
+                "已重新上线" +
+                LINE_FEED_QUOTE +
+                "应用地址：" +
+                instance.getRegistration().getServiceUrl() +
+                LINE_FEED_QUOTE +
+                "上线时间：" +
+                FastDateFormat.getInstance(DATE_FORMAT).format(nowDate) +
+                LINE_FEED_QUOTE +
+                MessageFormat.format(DETAIL_TEMPLATE, "详情信息", JSON.toJSONString(instance));
     }
 
     /**
@@ -122,50 +149,51 @@ public class DingtalkRequestUtil {
      * @return jvm消息内容
      */
     public static String buildJvmContent(Instance instance, JvmMemoryInfo jvmMemoryInfo) {
-        StringBuilder contentBuilder = new StringBuilder();
-        contentBuilder.append(instance.getRegistration().getName());
-        contentBuilder.append("JVM堆或非堆内存告警");
-        contentBuilder.append("\n");
-        contentBuilder.append("应用地址：");
-        contentBuilder.append(instance.getRegistration().getServiceUrl());
-        contentBuilder.append("\n");
-        contentBuilder.append("已使用堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getUsedHeap());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("已分配堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getCommittedHeap());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("最大堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getMaxHeap());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("已使用非堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getUsedNonHeap());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("最大非堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getMaxNonHeap());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("剩余可用内存：");
-        contentBuilder.append(jvmMemoryInfo.getSpareHead());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("剩余可分配堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getSpareCommitHead());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("剩余最大可用堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getSpareMaxHead());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        contentBuilder.append("剩余可用非堆内存：");
-        contentBuilder.append(jvmMemoryInfo.getSpareNonHeap());
-        contentBuilder.append("M");
-        contentBuilder.append("\n");
-        return contentBuilder.toString();
+        return "## " +
+                instance.getRegistration().getName() +
+                "内存告警（" +
+                jvmMemoryInfo.getWarningTitle() +
+                "）" +
+                LINE_FEED_QUOTE +
+                "应用地址：" +
+                instance.getRegistration().getServiceUrl() +
+                LINE_FEED_QUOTE +
+                "已使用堆内存：" +
+                jvmMemoryInfo.getUsedHeap() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "已分配堆内存：" +
+                jvmMemoryInfo.getCommittedHeap() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "最大堆内存：" +
+                jvmMemoryInfo.getMaxHeap() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "已使用非堆内存：" +
+                jvmMemoryInfo.getUsedNonHeap() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "最大非堆内存：" +
+                jvmMemoryInfo.getMaxNonHeap() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "剩余可用内存：" +
+                jvmMemoryInfo.getSpareHead() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "剩余可分配堆内存：" +
+                jvmMemoryInfo.getSpareCommitHead() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "剩余最大可用堆内存：" +
+                jvmMemoryInfo.getSpareMaxHead() +
+                "M" +
+                LINE_FEED_QUOTE +
+                "剩余可用非堆内存：" +
+                jvmMemoryInfo.getSpareNonHeap() +
+                "M" +
+                LINE_FEED_QUOTE;
     }
 
     /**
@@ -177,22 +205,31 @@ public class DingtalkRequestUtil {
      * @throws Exception
      */
     public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, String content) {
+        sendDingTalkMes(restTemplate, dingtalkProperties, DEFAULT_TITLE, content);
+    }
+
+    /**
+     * 发送钉钉消息
+     *
+     * @param restTemplate       rest对象
+     * @param dingtalkProperties 属性对象
+     * @param title              标题
+     * @param content            内容
+     */
+    public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, String title, String content) {
         try {
             String dingtalkUrl = buildDingtalkUrl(dingtalkProperties);
             HttpHeaders headers = new HttpHeaders();
             headers.add(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            DingtalkTextMessage textMessage = DingtalkTextMessage.builder()
+            DingtalkMdMessage mdMessage = DingtalkMdMessage.builder()
+                    .title(title)
                     .content(content)
                     .build();
-            DingtalkMessage dingtalkMessage = DingtalkMessageBuilder.textMessageBuilder()
-                    .textMessage(textMessage)
-                    .build();
-            HttpEntity<String> requestEntity = new HttpEntity<>(JSON.toJSONString(dingtalkMessage), headers);
+            HttpEntity<String> requestEntity = new HttpEntity<>(JSON.toJSONString(mdMessage), headers);
             restTemplate.postForObject(dingtalkUrl, requestEntity, Object.class);
         } catch (Exception e) {
             log.error("钉钉消息发送异常:", e);
         }
-
     }
 
 }

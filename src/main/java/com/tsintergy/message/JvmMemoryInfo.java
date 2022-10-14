@@ -49,21 +49,26 @@ public class JvmMemoryInfo {
     /**
      * 剩余可用堆内存
      */
-    BigDecimal spareHead;
+    private BigDecimal spareHead;
 
     /**
      * 剩余可分配堆内存
      */
-    BigDecimal spareCommitHead;
+    private BigDecimal spareCommitHead;
 
     /**
      * 剩余最大可用堆内存
      */
-    BigDecimal spareMaxHead;
+    private BigDecimal spareMaxHead;
 
     /**
      * 剩余可用非堆内存
      */
-    BigDecimal spareNonHeap;
+    private BigDecimal spareNonHeap;
+
+    /**
+     * 告警标题
+     */
+    private String warningTitle;
 
 }

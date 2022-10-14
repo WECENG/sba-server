@@ -12,7 +12,12 @@ public enum DingtalkMessageType {
     /**
      * 文本
      */
-    TEXT("text");
+    TEXT("text"),
+
+    /**
+     * markdown
+     */
+    MARKDOWN("markdown");
 
     private final String name;
 
