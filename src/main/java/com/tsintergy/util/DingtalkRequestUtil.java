@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
@@ -39,7 +40,7 @@ public class DingtalkRequestUtil {
     /**
      * 默认标题
      */
-    public static final String DEFAULT_TITLE = "应用告警";
+    public static final String DEFAULT_TITLE_TEMPLATE = "{0}应用告警";
 
     /**
      * 换行
@@ -66,21 +67,59 @@ public class DingtalkRequestUtil {
                     "</details>";
 
     /**
+     * 客户端钉钉token
+     */
+    public static final String CLIENT_DING_TALK_TOKEN_KEY = "dt-token";
+
+    /**
+     * 客户端钉钉密钥
+     */
+    public static final String CLIENT_DING_TALK_SECRET_KEY = "dt-secret";
+
+    /**
+     * 应用名称
+     */
+    public static final String APP_NAME_KEY = "app-name";
+
+
+    /**
+     * 获取客户端钉钉token
+     *
+     * @param instance 实例对象
+     * @return 客户端钉钉token
+     */
+    public static String getClientDingtalkToken(Instance instance, DingtalkProperties dingtalkProperties) {
+        return instance.getRegistration().getMetadata().getOrDefault(CLIENT_DING_TALK_TOKEN_KEY, dingtalkProperties.getToken());
+    }
+
+    /**
+     * 获取客户端钉钉密钥
+     *
+     * @param instance 实例对象
+     * @return 客户端钉钉密钥
+     */
+    public static String getClientDingtalkSecret(Instance instance, DingtalkProperties dingtalkProperties) {
+        return instance.getRegistration().getMetadata().getOrDefault(CLIENT_DING_TALK_SECRET_KEY, dingtalkProperties.getSecret());
+    }
+
+    /**
      * 构建钉钉url
      *
      * @return 钉钉url
      */
-    public static String buildDingtalkUrl(DingtalkProperties dingtalkProperties) throws Exception {
+    public static String buildDingtalkUrl(DingtalkProperties dingtalkProperties, Instance instance) throws Exception {
         StringBuilder dingtalkUrlBuilder = new StringBuilder(dingtalkProperties.getUrl());
         Assert.notNull(dingtalkProperties.getToken(), "请配置钉钉消息通知token!");
-        if (StringUtils.isNotBlank(dingtalkProperties.getToken())) {
+        String token = getClientDingtalkToken(instance, dingtalkProperties);
+        String secret = getClientDingtalkSecret(instance, dingtalkProperties);
+        if (StringUtils.isNotBlank(token)) {
             dingtalkUrlBuilder.append("?");
             dingtalkUrlBuilder.append("access_token=");
-            dingtalkUrlBuilder.append(dingtalkProperties.getToken());
+            dingtalkUrlBuilder.append(token);
         }
-        if (StringUtils.isNotBlank(dingtalkProperties.getSecret())) {
+        if (StringUtils.isNotBlank(secret)) {
             long timestamp = DingtalkSignUtils.getTimestamp();
-            String sign = DingtalkSignUtils.getSign(timestamp, dingtalkProperties.getSecret());
+            String sign = DingtalkSignUtils.getSign(timestamp, secret);
             dingtalkUrlBuilder.append("&");
             dingtalkUrlBuilder.append("timestamp=");
             dingtalkUrlBuilder.append(timestamp);
@@ -89,6 +128,26 @@ public class DingtalkRequestUtil {
             dingtalkUrlBuilder.append(sign);
         }
         return dingtalkUrlBuilder.toString();
+    }
+
+    /**
+     * 获取应用名
+     *
+     * @param instance 实例对象
+     * @return 应用名
+     */
+    public static String getAppName(Instance instance) {
+        return instance.getRegistration().getMetadata().getOrDefault(APP_NAME_KEY, instance.getRegistration().getName());
+    }
+
+    /**
+     * 构建标题
+     *
+     * @param instance 实例对象
+     * @return 标题
+     */
+    public static String buildTitle(Instance instance) {
+        return MessageFormat.format(DEFAULT_TITLE_TEMPLATE, getAppName(instance));
     }
 
     /**
@@ -101,8 +160,8 @@ public class DingtalkRequestUtil {
         Date downDate = Date.from(instance.getStatusTimestamp());
         Date nowDate = new Date();
         return "## " +
-                instance.getRegistration().getName() +
-                "已下线" +
+                getAppName(instance) +
+                "应用已下线" +
                 LINE_FEED_QUOTE +
                 "应用地址：" +
                 instance.getRegistration().getServiceUrl() +
@@ -129,8 +188,8 @@ public class DingtalkRequestUtil {
     public static String buildDownToUpContent(Instance instance) {
         Date nowDate = new Date();
         return "## " +
-                instance.getRegistration().getName() +
-                "已重新上线" +
+                getAppName(instance) +
+                "应用已重新上线" +
                 LINE_FEED_QUOTE +
                 "应用地址：" +
                 instance.getRegistration().getServiceUrl() +
@@ -150,8 +209,8 @@ public class DingtalkRequestUtil {
      */
     public static String buildJvmContent(Instance instance, JvmMemoryInfo jvmMemoryInfo) {
         return "## " +
-                instance.getRegistration().getName() +
-                "内存告警（" +
+                getAppName(instance) +
+                "应用内存告警（" +
                 jvmMemoryInfo.getWarningTitle() +
                 "）" +
                 LINE_FEED_QUOTE +
@@ -201,28 +260,16 @@ public class DingtalkRequestUtil {
      *
      * @param restTemplate       rest对象
      * @param dingtalkProperties 属性对象
-     * @param content            文本内容
-     * @throws Exception
-     */
-    public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, String content) {
-        sendDingTalkMes(restTemplate, dingtalkProperties, DEFAULT_TITLE, content);
-    }
-
-    /**
-     * 发送钉钉消息
-     *
-     * @param restTemplate       rest对象
-     * @param dingtalkProperties 属性对象
-     * @param title              标题
+     * @param instance           实例对象
      * @param content            内容
      */
-    public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, String title, String content) {
+    public static void sendDingTalkMes(RestTemplate restTemplate, DingtalkProperties dingtalkProperties, Instance instance, String content) {
         try {
-            String dingtalkUrl = buildDingtalkUrl(dingtalkProperties);
+            String dingtalkUrl = buildDingtalkUrl(dingtalkProperties, instance);
             HttpHeaders headers = new HttpHeaders();
             headers.add(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
             DingtalkMdMessage mdMessage = DingtalkMdMessage.builder()
-                    .title(title)
+                    .title(buildTitle(instance))
                     .content(content)
                     .build();
             HttpEntity<String> requestEntity = new HttpEntity<>(JSON.toJSONString(mdMessage), headers);

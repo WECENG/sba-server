@@ -9,6 +9,7 @@ import de.codecentric.boot.admin.server.domain.events.InstanceEvent;
 import de.codecentric.boot.admin.server.domain.events.InstanceStatusChangedEvent;
 import de.codecentric.boot.admin.server.domain.values.InstanceId;
 import de.codecentric.boot.admin.server.notify.AbstractEventNotifier;
+import io.micrometer.core.lang.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
@@ -50,7 +51,8 @@ public class StatusChangeNotifier extends AbstractEventNotifier {
     }
 
     @Override
-    public Mono<Void> notify(InstanceEvent event) {
+    @NonNull
+    public Mono<Void> notify(@NonNull InstanceEvent event) {
         return super.notify(event).then(Mono.fromRunnable(() -> updateLastStatus(event)));
     }
 
@@ -66,7 +68,8 @@ public class StatusChangeNotifier extends AbstractEventNotifier {
     }
 
     @Override
-    protected Mono<Void> doNotify(InstanceEvent event, Instance instance) {
+    @NonNull
+    protected Mono<Void> doNotify(@NonNull InstanceEvent event, @NonNull Instance instance) {
         return Mono.fromRunnable(() -> {
             if (event instanceof InstanceStatusChangedEvent) {
                 String lastStatus = lastStatuses.getOrDefault(instance.getId(), "UNKNOWN");
@@ -76,11 +79,11 @@ public class StatusChangeNotifier extends AbstractEventNotifier {
                 String instanceId = instance.getId().getValue();
                 if (downOrOffline) {
                     keepingMonitor.doMonitor(true, instanceId, (instId) ->
-                            DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties,
+                            DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, instance,
                                     DingtalkRequestUtil.buildDownOrOfflineContent(instance)));
                 }
                 if (up && lastDownOrOffline) {
-                    DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties,
+                    DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, instance,
                             DingtalkRequestUtil.buildDownToUpContent(instance));
                 }
             }

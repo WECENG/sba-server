@@ -9,9 +9,7 @@ import com.tsintergy.util.JvmRequestUtil;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunction;
 import io.micrometer.core.lang.NonNull;
-import io.micrometer.core.lang.NonNullApi;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -119,7 +117,7 @@ public class JvmMonitor extends DefaultKeepingMonitor implements InstanceExchang
                         .build();
                 String instanceId = instance.getId().getValue();
                 doMonitor(shouldAlarm(jvmMemoryInfo), instanceId, (instId) ->
-                        DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties,
+                        DingtalkRequestUtil.sendDingTalkMes(restTemplate, dingtalkProperties, instance,
                                 DingtalkRequestUtil.buildJvmContent(instance, jvmMemoryInfo)));
             }
         });
