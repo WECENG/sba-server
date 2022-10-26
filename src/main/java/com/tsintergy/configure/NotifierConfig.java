@@ -1,5 +1,6 @@
 package com.tsintergy.configure;
 
+import com.tsintergy.notify.CpuMonitor;
 import com.tsintergy.notify.DefaultKeepingMonitor;
 import com.tsintergy.notify.StatusChangeNotifier;
 import com.tsintergy.notify.JvmMonitor;
@@ -107,6 +108,14 @@ public class NotifierConfig {
                                                          DingtalkProperties dingtalkProperties,
                                                          RemindingProperties remindingProperties) {
             return new JvmMonitor(getRestTemplate(), jvmMonitorProperties, dingtalkProperties, remindingProperties);
+        }
+
+        @Bean
+        @ConditionalOnBean({DingtalkProperties.class, RestTemplate.class, CpuMonitorProperties.class, RemindingProperties.class})
+        public InstanceExchangeFilterFunction cpuMonitor(CpuMonitorProperties cpuMonitorProperties,
+                                                         DingtalkProperties dingtalkProperties,
+                                                         RemindingProperties remindingProperties) {
+            return new CpuMonitor(getRestTemplate(), cpuMonitorProperties, dingtalkProperties, remindingProperties);
         }
 
     }

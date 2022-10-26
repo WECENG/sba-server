@@ -28,6 +28,9 @@ spring:
         jvm:
           monitor:
             spare-non-heap: 2000
+        cpu:
+          monitor:
+            process-cpu-usage: 0.01
         dingtalk:
           url: https://oapi.dingtalk.com/robot/send
           token: 203b0d9f1c58c4d31b3165ff1ac25dc3a9fda86d821e60a259effdce65e32179

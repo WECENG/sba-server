@@ -6,7 +6,9 @@ import cn.hutool.core.date.format.FastDateFormat;
 import cn.hutool.core.lang.Assert;
 import com.alibaba.fastjson.JSON;
 import com.tsintergy.configure.DingtalkProperties;
-import com.tsintergy.message.*;
+import com.tsintergy.message.CpuInfo;
+import com.tsintergy.message.DingtalkMdMessage;
+import com.tsintergy.message.JvmMemoryInfo;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.text.MessageFormat;
 import java.util.Date;
-import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
@@ -252,6 +253,32 @@ public class DingtalkRequestUtil {
                 "剩余可用非堆内存：" +
                 jvmMemoryInfo.getSpareNonHeap() +
                 "M" +
+                LINE_FEED_QUOTE;
+    }
+
+    /**
+     * 构造cpu消息内容
+     * @param instance 实例对象
+     * @param cpuInfo cpu信息
+     * @return cpu消息内容
+     */
+    public static String buildCpuContent(Instance instance, CpuInfo cpuInfo) {
+        return "## " +
+                getAppName(instance) +
+                "CPU告警（" +
+                cpuInfo.getWarningTitle() +
+                "）" +
+                LINE_FEED_QUOTE +
+                "应用地址：" +
+                instance.getRegistration().getServiceUrl() +
+                LINE_FEED_QUOTE +
+                "进程CPU使用率：" +
+                cpuInfo.getProcessCpuUsage() +
+                "%" +
+                LINE_FEED_QUOTE +
+                "系统CPU使用率：" +
+                cpuInfo.getSystemCpuUsage() +
+                "%" +
                 LINE_FEED_QUOTE;
     }
 
